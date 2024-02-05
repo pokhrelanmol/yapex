@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract USDCToken is ERC20, Ownable {
-    constructor() ERC20("Fake USD Coin", "USDC") Ownable(msg.sender) {
+    constructor() ERC20("Fake USD Coin", "FUSDC") Ownable(msg.sender) {
         _mint(msg.sender, 1000000e6);
     }
 

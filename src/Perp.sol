@@ -55,6 +55,21 @@ struct Position {
 /// @notice This is implementation of Mission 1 from https://guardianaudits.notion.site/Mission-1-Perpetuals-028ca44faa264d679d6789d5461cfb13
 
 contract Perp {
+    event PositionOpened(
+        bytes32 positionKey,
+        address owner,
+        uint256 size,
+        uint256 collateral,
+        bool isLong
+    );
+    event CollateralIncreased(
+        bytes32 positionKey,
+        uint256 additionalCollateral
+    );
+    event PositionSizeIncreased(bytes32 positionKey, uint256 additionalSize);
+    event CollateralDecreased(bytes32 positionKey, uint256 collateralDecrease);
+    event PositionSizeDecreased(bytes32 positionKey, uint256 sizeDecrease);
+
     using SafeERC20 for IERC20;
 
     AggregatorV3Interface internal btcPriceFeed;
@@ -144,6 +159,7 @@ contract Perp {
         );
         adjustOpenInterest(size, isLong, sizeInUsd);
         return positionKey; // @audit do we really need this? Yes there is no other way to get user position key
+        emit PositionOpened(positionKey, msg.sender, size, collateral, isLong);
     }
 
     function increaseCollateral(
@@ -153,6 +169,7 @@ contract Perp {
         if (additionalCollateral == 0) revert ZeroAmount();
         Position storage p = positions[positionKey];
         p.collateral += additionalCollateral;
+        emit CollateralIncreased(positionKey, additionalCollateral);
     }
 
     function increasePositionSize(
@@ -191,6 +208,7 @@ contract Perp {
         }
 
         liquidityToken.safeTransfer(msg.sender, collateralDecrease);
+        emit CollateralDecreased(positionKey, collateralDecrease);
     }
 
     function decreasePositionSize(
@@ -215,6 +233,7 @@ contract Perp {
             p.collateral -= abs(realisedPNL);
             liquidityToken.safeTransfer(address(pool), abs(realisedPNL));
         }
+        emit PositionSizeDecreased(positionKey, sizeDecrease);
     }
 
     function liquidatePosition(bytes32 positionKey) external {
